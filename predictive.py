@@ -82,7 +82,7 @@ def predict(user_id, j_str, path = ''):
     user_meal_data =  data[['k', 'b' , 'j' , 'u']].astype(float)
 
     path_to_folder = os.path.join(path, 'user_models')
-    path_to_file = os.path.join(path_to_folder, str(user_id) + '_model.pickle')
+    path_to_file = os.path.join(path_to_folder, str(1) + '_model.pickle')
 
     with open(path_to_file, 'rb') as f:
         model_fit = pickle.load(f)
