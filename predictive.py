@@ -1,9 +1,4 @@
 import os
-import pickle
-
-import pandas as pd
-
-import os
 import json
 import pickle
 
@@ -20,9 +15,7 @@ def read_data(user_id, path = ''):
     data = data.drop(['date', 'time'], axis=1)
     data = data.set_index('date_time')
     #загрузка данных о времени приема пищи и значениях кбжу продукта
-
-    path_to_file = os.path.join(path_to_folder, str(user_id) + '_glucose.csv')
-    meal_data = pd.read_csv(path_to_file, delimiter=';',
+    meal_data = pd.read_csv(path + str(user_id) + '_meal.csv', delimiter=';',
                             names=['date', 'time', 'k', 'b', 'j', 'u'])
 
     meal_data['date_time'] = pd.to_datetime(meal_data['date'] + ' ' + meal_data['time'], format='%d.%m.%Y %H:%M')
@@ -60,6 +53,9 @@ def parse_prediction_data(j_str):
     user_glucose_data = pd.DataFrame(j_str['glucose'])
     user_meal_data = pd.DataFrame(j_str['events'])
 
+    if (user_glucose_data.empty):
+        return pd.DataFrame()
+
     if(user_meal_data.empty):
         user_meal_data = pd.DataFrame(columns=['datetime','k','b','j','u'])
 
@@ -78,6 +74,9 @@ def parse_prediction_data(j_str):
 def predict(user_id, j_str, path = ''):
 
     data = parse_prediction_data(j_str)
+
+    if(data.empty):
+        return []
 
     user_glucose_data = data['Gl'].astype(float)
     user_meal_data =  data[['k', 'b' , 'j' , 'u']].astype(float)
@@ -101,33 +100,32 @@ def predict(user_id, j_str, path = ''):
     # prediction
     p = model_fit.predict(start=Start, end = End - 1, exog = empty)
     predictions = pd.to_numeric(p, errors='coerce')
-    return predictions.tolist()
-
+    return predictions
 
 
 
 if __name__ == '__main__':
     js = {
-   "user_id": 10001,
+        "user_id": 10001,
 
-   "glucose": [
-    {"datetime": "2021-09-20 00:00:05", "Gl": 4.9},
-    {"datetime": "2021-09-20 00:05:10", "Gl": 4.7},
-    {"datetime": "2021-09-20 00:10:20", "Gl": 4.4},
-    {"datetime": "2021-09-20 00:15:30", "Gl": 4.3},
-    {"datetime": "2021-09-20 00:20:35", "Gl": 4.1},
-    {"datetime": "2021-09-20 00:25:45", "Gl": 4.2},
-    {"datetime": "2021-09-20 00:30:55", "Gl": 4.0},
-    {"datetime": "2021-09-20 00:35:00", "Gl": 4.2},
-    {"datetime": "2021-09-20 00:40:10", "Gl": 4.1},
-    {"datetime": "2021-09-20 00:45:20", "Gl": 4.7}
-  ],
+        "glucose": [
+            {"datetime": "2021-09-20 00:00:05", "Gl": 4.9},
+            {"datetime": "2021-09-20 00:05:10", "Gl": 4.7},
+            {"datetime": "2021-09-20 00:10:20", "Gl": 4.4},
+            {"datetime": "2021-09-20 00:15:30", "Gl": 4.3},
+            {"datetime": "2021-09-20 00:20:35", "Gl": 4.1},
+            {"datetime": "2021-09-20 00:25:45", "Gl": 4.2},
+            {"datetime": "2021-09-20 00:30:55", "Gl": 4.0},
+            {"datetime": "2021-09-20 00:35:00", "Gl": 4.2},
+            {"datetime": "2021-09-20 00:40:10", "Gl": 4.1},
+            {"datetime": "2021-09-20 00:45:20", "Gl": 4.7}
+        ],
 
- "events": [
-        {"datetime": "2021-09-20 00:20:35", "k": 1.2, "b": 3.4, "j": 5.6, "u": 7.8},
-        {"datetime": "2021-09-20 00:45:20", "k": 2.2, "b": 4.5, "j": 6.7, "u": 8.9}
-    ]
+        "events": [
+            {"datetime": "2021-09-20 00:20:35", "k": 1.2, "b": 3.4, "j": 5.6, "u": 7.8},
+            {"datetime": "2021-09-20 00:45:20", "k": 2.2, "b": 4.5, "j": 6.7, "u": 8.9}
+        ]
 
-}
+    }
 
     print(predict(2, js))
