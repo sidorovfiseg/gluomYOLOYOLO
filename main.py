@@ -1,7 +1,6 @@
 import json
 from fastapi import FastAPI, Depends
 import crud
-import fit
 import predictive
 import models
 import schemas
