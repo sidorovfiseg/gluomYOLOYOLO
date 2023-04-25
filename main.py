@@ -2,6 +2,7 @@ import json
 from fastapi import FastAPI, Depends
 import crud
 import fit
+import predictive
 import models
 import schemas
 from database import SessionLocal, engine
@@ -53,8 +54,7 @@ def create_training_event(train_event: schemas.TrainEventCreate, db: Session = D
 @app.get("/predict/{user_id}")
 def get_predict(user_id: int, db: Session = Depends(get_db)):
 
-    dict1 = json.loads(crud.get_glucose_by_id(db=db, user_id=user_id))
-    dict2 = json.loads(crud.get_event_by_id(db=db, user_id=user_id))
-    dict3 = {'glucose': dict1, 'events': dict2}
-    return fit.predict(user_id, dict3)
+    glucose = json.loads(crud.get_glucose_by_id(db=db, user_id=user_id))
+    events = json.loads(crud.get_event_by_id(db=db, user_id=user_id))
+    return predictive.predict(user_id, {'glucose': glucose, 'events': events})
 
