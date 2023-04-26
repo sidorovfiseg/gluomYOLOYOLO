@@ -7,16 +7,16 @@ from sqlalchemy import desc
 
 
 def create_user(db: Session, user: schemas.User):
-    db_user = models.User(user_id=user.user_id, diabetic_type=user.diabetic_type)
+    db_user = models.User(diabetic_type=user.diabetic_type)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return db_user
+    return db_user.user_id
 
 
 def create_glucose(db: Session, glucose: schemas.Glucose):
     
-    for i in range(len(glucose.glucose_values)):
+    for i in range(min(len(glucose.glucose_values), len(glucose.glucose_time))):
     
         db_glucose = models.Glucose(user_id=glucose.user_id,
                                     glucose_time=glucose.glucose_time[i],

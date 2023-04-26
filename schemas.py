@@ -11,6 +11,10 @@ class User(BaseModel):
         orm_mode = True
 
 
+class UserCreate(BaseModel):
+    diabetic_type: int
+
+
 class GlucoseCreate(BaseModel):
     user_id: int
     glucose_time: list[datetime.datetime]

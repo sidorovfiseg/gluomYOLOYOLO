@@ -22,8 +22,8 @@ def get_db():
 
 
 # maybe need to change int to uuid
-@app.post("/create_user/", response_model=schemas.User)
-def create_user(user: schemas.User, db: Session = Depends(get_db)):
+@app.post("/create_user/")
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 
@@ -54,6 +54,8 @@ def create_training_event(train_event: schemas.TrainEventCreate, db: Session = D
 def get_predict(user_id: int, db: Session = Depends(get_db)):
 
     glucose = json.loads(crud.get_glucose_by_id(db=db, user_id=user_id))
+    print(glucose)
     events = json.loads(crud.get_event_by_id(db=db, user_id=user_id))
-    return predictive.predict(user_id, {'glucose': glucose, 'events': events})
+    print(events)
+    return predictive.predict(user_id, {'glucose': glucose[::-1], 'events': events[::-1]})
 
