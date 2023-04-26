@@ -30,7 +30,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 # fix this and glucose_id we are incrementing automaticly
 @app.post("/create_glucose/")
 def create_glucose(glucose: schemas.GlucoseCreate, db: Session = Depends(get_db)):
-    return crud.create_glucose(db=db, glucose=glucose)
+    return crud.create_glucose(db=db, glucose = glucose)
 
 
 # eating event incrementing automaticly
