@@ -11,10 +11,30 @@ class User(BaseModel):
         orm_mode = True
 
 
+class UserCreate(BaseModel):
+    diabetic_type: int
+
+
 class GlucoseCreate(BaseModel):
     user_id: int
     glucose_time: list[datetime.datetime]
     glucose_values: list[float]
+
+    class Config:
+        schema_extra = {
+        "example": {
+            "user_id": 0,
+            "glucose_time": [
+                "2023-04-26T14:24"
+            ],
+            "glucose_values": [
+                4.6
+            ]
+        }
+    }
+
+
+
 
 
 class Glucose(BaseModel):
@@ -47,6 +67,19 @@ class EatingEventCreate(BaseModel):
     proteins: float
     fats: float
     carbs: float
+
+    class Config:
+        schema_extra = {
+        "example": {
+            "user_id": 0,
+            "event_time": "2023-04-26T14:29",
+            "calories": 0,
+            "proteins": 0,
+            "fats": 0,
+            "carbs": 0
+}
+        }
+
 
 
 class InsulinEvent(BaseModel):

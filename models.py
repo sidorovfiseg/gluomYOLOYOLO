@@ -10,7 +10,7 @@ from database import Base
 class User(Base):
     __tablename__ = "users"
 
-    user_id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, primary_key=True, index=True)
     diabetic_type = Column(Integer, nullable=False)
 
 
