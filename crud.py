@@ -69,6 +69,13 @@ def get_glucose_by_id(db: Session, user_id: int):
     return json.dumps(rows, default=str)
 
 
+def get_all_glucose_by_id(db: Session, user_id: int):
+    result = db.execute(db.query(models.Glucose.glucose_time, models.Glucose.glucose_value).
+                        filter(models.Glucose.user_id == user_id))
+    rows = [{'datetime': i, 'Gl': j} for i, j in result.fetchall()]
+    return json.dumps(rows, default=str)
+
+
 def get_event_by_id(db: Session, user_id: int):
     result = db.execute(db.query(models.EatingEvent.event_time,
                                  models.EatingEvent.calories,
@@ -80,3 +87,30 @@ def get_event_by_id(db: Session, user_id: int):
     rows = [{'datetime': i, 'k': j, 'b': k, 'j': l, 'u': p} for i, j, k, l, p in result.fetchall()]
     return json.dumps(rows, default=str)
 
+
+def get_eating_event_by_id(db: Session, user_id: int):
+    result = db.execute(db.query(models.EatingEvent.event_time,
+                                 models.EatingEvent.calories,
+                                 models.EatingEvent.proteins,
+                                 models.EatingEvent.fats,
+                                 models.EatingEvent.carbs).
+                        filter(models.EatingEvent.user_id == user_id))
+    rows = [{'datetime': i, 'k': j, 'b': k, 'j': l, 'u': p} for i, j, k, l, p in result.fetchall()]
+    return json.dumps(rows, default=str)
+
+
+def get_insulin_event_by_id(db: Session, user_id: int):
+    result = db.execute(db.query(models.InsulinEvent.event_time,
+                                 models.InsulinEvent.insulin_type,
+                                 models.InsulinEvent.insulin_amount).
+                        filter(models.InsulinEvent.user_id == user_id))
+    rows = [{'datetime': i, 'type': j, 'amount': k} for i, j, k in result.fetchall()]
+    return json.dumps(rows, default=str)
+
+def get_training_event_by_id(db: Session, user_id: int):
+    result = db.execute(db.query(models.TrainEvent.event_time,
+                                 models.TrainEvent.train_type,
+                                 models.TrainEvent.train_duration).
+                        filter(models.TrainEvent.user_id == user_id))
+    rows = [{'datetime': i, 'type': j, 'duration': k} for i, j, k in result.fetchall()]
+    return json.dumps(rows, default=str)
