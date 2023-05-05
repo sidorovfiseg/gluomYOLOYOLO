@@ -55,16 +55,18 @@ def get_predict(user_id: int, db: Session = Depends(get_db)):
 
     glucose = json.loads(crud.get_glucose_by_id(db=db, user_id=user_id))
     print(glucose)
-    events = json.loads(crud.get_event_by_id(db=db, user_id=user_id))
+    events = json.loads(crud.get_eating_event_by_id(db=db, user_id=user_id))
     print(events)
+    insulin = json.loads(crud.get_insulin_event_by_id(db=db, user_id=user_id))
+    print(insulin)
     return predictive.predict(user_id, {'glucose': glucose[::-1], 'events': events[::-1]})
 
 
 
 # fit method
-@app.get("/fit/{user_id}")
-def get_fit(user_id: int, db: Session = Depends(get_db())):
-    glucose = json.loads(crud.get_all_glucose_by_id(db=db, user_id=user_id))
-    eating_event = json.loads(crud.get_eating_event_by_id(db=db, user_id=user_id))
-    insulin_event = json.loads(crud.get_insulin_event_by_id(db=db, user_id=user_id))
-    training_event = json.loads(crud.get_training_event_by_id(db=db, user_id=user_id))
+# @app.get("/fit/{user_id}")
+# def get_fit(user_id: int, db: Session = Depends(get_db())):
+#     glucose = json.loads(crud.get_all_glucose_by_id(db=db, user_id=user_id))
+#     eating_event = json.loads(crud.get_eating_event_by_id(db=db, user_id=user_id))
+#     insulin_event = json.loads(crud.get_insulin_event_by_id(db=db, user_id=user_id))
+#     training_event = json.loads(crud.get_training_event_by_id(db=db, user_id=user_id))
