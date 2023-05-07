@@ -65,7 +65,7 @@ def create_eating_event(db: Session, eating_event: schemas.EatingEvent):
 def get_glucose_by_id(db: Session, user_id: int):
     result = db.execute(db.query(models.Glucose.glucose_time, models.Glucose.glucose_value).
                         filter(models.Glucose.user_id == user_id).order_by(desc(models.Glucose.glucose_id)).limit(50))
-    rows = [{'datetime': i.strftime("%m/%d/%Y, %H:%M"), 'Gl': j} for i, j in result.fetchall()]
+    rows = [{'datetime': i.strftime("%d.%m.%Y %H:%M"), 'Gl': j} for i, j in result.fetchall()]
     return json.dumps(rows, default=str)
 
 
@@ -77,7 +77,7 @@ def get_eating_event_by_id(db: Session, user_id: int):
                                  models.EatingEvent.carbs).
                         filter(models.EatingEvent.user_id == user_id).\
                         order_by(desc(models.EatingEvent.eating_event_id)).limit(50))
-    rows = [{'datetime': i.strftime("%m/%d/%Y, %H:%M"), 'k': j, 'b': k, 'j': l, 'u': p} for i, j, k, l, p in result.fetchall()]
+    rows = [{'datetime': i.strftime("%d.%m.%Y %H:%M"), 'k': j, 'b': k, 'j': l, 'u': p} for i, j, k, l, p in result.fetchall()]
     return json.dumps(rows, default=str)
 
 
@@ -87,7 +87,7 @@ def get_insulin_event_by_id(db: Session, user_id: int):
                                  models.InsulinEvent.insulin_amount).
                         filter(models.InsulinEvent.user_id == user_id).
                         order_by(desc(models.InsulinEvent.insulin_event_id)).limit(50))
-    rows = [{'datetime': i.strftime("%m/%d/%Y, %H:%M"), 'type': j, 'amount': k} for i, j, k in result.fetchall()]
+    rows = [{'datetime': i.strftime("%d.%m.%Y %H:%M"), 'type': j, 'count': k} for i, j, k in result.fetchall()]
     return json.dumps(rows, default=str)
 
 
@@ -98,14 +98,14 @@ def get_all_eating_event_by_id(db: Session, user_id: int):
                                  models.EatingEvent.fats,
                                  models.EatingEvent.carbs).
                         filter(models.EatingEvent.user_id == user_id))
-    rows = [{'datetime': i.strftime("%m/%d/%Y, %H:%M"), 'k': j, 'b': k, 'j': l, 'u': p} for i, j, k, l, p in result.fetchall()]
+    rows = [{'datetime': i.strftime("%d.%m.%Y %H:%M"), 'k': j, 'b': k, 'j': l, 'u': p} for i, j, k, l, p in result.fetchall()]
     return json.dumps(rows, default=str)
 
 
 def get_all_glucose_by_id(db: Session, user_id: int):
     result = db.execute(db.query(models.Glucose.glucose_time, models.Glucose.glucose_value).
                         filter(models.Glucose.user_id == user_id))
-    rows = [{'datetime': i.strftime("%m/%d/%Y, %H:%M"), 'Gl': j} for i, j in result.fetchall()]
+    rows = [{'datetime': i.strftime("%d.%m.%Y %H:%M"), 'Gl': j} for i, j in result.fetchall()]
     return json.dumps(rows, default=str)
 
 
@@ -114,7 +114,7 @@ def get_all_insulin_event_by_id(db: Session, user_id: int):
                                  models.InsulinEvent.insulin_type,
                                  models.InsulinEvent.insulin_amount).
                         filter(models.InsulinEvent.user_id == user_id))
-    rows = [{'datetime': i.strftime("%m/%d/%Y, %H:%M"), 'type': j, 'amount': k} for i, j, k in result.fetchall()]
+    rows = [{'datetime': i.strftime("%d.%m.%Y %H:%M"), 'type': j, 'count': k} for i, j, k in result.fetchall()]
     return json.dumps(rows, default=str)
 
 
@@ -123,5 +123,5 @@ def get_all_training_event_by_id(db: Session, user_id: int):
                                  models.TrainEvent.train_type,
                                  models.TrainEvent.train_duration).
                         filter(models.TrainEvent.user_id == user_id))
-    rows = [{'datetime': i.strftime("%m/%d/%Y, %H:%M"), 'type': j, 'duration': k} for i, j, k in result.fetchall()]
+    rows = [{'datetime': i.strftime("%d.%m.%Y %H:%M"), 'type': j, 'duration': k} for i, j, k in result.fetchall()]
     return json.dumps(rows, default=str)

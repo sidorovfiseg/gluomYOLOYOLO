@@ -16,6 +16,8 @@ def parse_data(j_str):
     user_meal_data = pd.DataFrame(j_str['meal_events'])
     user_insulin_data = pd.DataFrame(j_str['insulin_events'])
 
+    print(user_insulin_data)
+
     if not user_glucose_data.empty:
         user_glucose_data['datetime'] = pd.to_datetime(user_glucose_data['datetime'], format='%d.%m.%Y %H:%M')
     else:
@@ -24,28 +26,28 @@ def parse_data(j_str):
 
     if not user_meal_data.empty:
         user_meal_data['datetime'] = pd.to_datetime(user_meal_data['datetime'], format='%d.%m.%Y %H:%M')
+        user_meal_data = user_meal_data.set_index('datetime')
+        user_meal_data.index = user_meal_data.index.floor('5min')
+        user_meal_data = user_meal_data[~user_meal_data.index.duplicated(keep='first')]
     else:
         user_meal_data = pd.DataFrame(columns=['datetime', 'k', 'b', 'j', 'u'])
+        user_meal_data = user_meal_data.set_index('datetime')
 
-    if not user_meal_data.empty:
+    if not user_insulin_data.empty:
         user_insulin_data['datetime'] = pd.to_datetime(user_insulin_data['datetime'], format='%d.%m.%Y %H:%M')
+        user_insulin_data = user_insulin_data.set_index('datetime')
+        user_insulin_data.index = user_insulin_data.index.floor('5min')
+        user_insulin_data = user_insulin_data[~user_insulin_data.index.duplicated(keep='first')]
     else:
         user_insulin_data = pd.DataFrame(columns=['datetime','count', 'type'])
+        user_insulin_data = user_insulin_data.set_index('datetime')
 
     user_glucose_data = user_glucose_data.set_index('datetime')
     user_glucose_data.index = user_glucose_data.index.floor('5min')
     user_glucose_data = user_glucose_data[~user_glucose_data.index.duplicated(keep='first')]
 
-    user_meal_data = user_meal_data.set_index('datetime')
-    user_meal_data.index = user_meal_data.index.floor('5min')
-    user_meal_data = user_meal_data[~user_meal_data.index.duplicated(keep='first')]
 
-    user_insulin_data = user_insulin_data.set_index('datetime')
-    user_insulin_data['type'] = user_insulin_data['type'].str.replace('новорапид', '1')
-    user_insulin_data['type'] = user_insulin_data['type'].str.replace('туджео', '2')
-    user_insulin_data['type'] = user_insulin_data['type'].astype(float)
-    user_insulin_data.index = user_insulin_data.index.floor('5min')
-    user_insulin_data = user_insulin_data[~user_insulin_data.index.duplicated(keep='first')]
+
 
     data = pd.merge(user_glucose_data, user_meal_data, how='left', left_index=True, right_index=True).fillna(0)
     data = pd.merge(data, user_insulin_data, how='left', left_index=True, right_index=True).fillna(0)
@@ -176,7 +178,6 @@ def night_predict(prev_data, start_size, history_size, prediction_size, model_ni
     return p
 
 def predict_future(prev_data, exog, start_size, history_size, prediction_size, model_meal, model_night):
-    color = 'black'
     past_event_index = prev_data.loc[prev_data['k'] != 0].index.to_list()
     if past_event_index:
         past_event_index = past_event_index[-1]
@@ -186,7 +187,6 @@ def predict_future(prev_data, exog, start_size, history_size, prediction_size, m
     if past_event_index > prev_data.index[0] + start_size + 15:
         prev_data = prev_data.loc[past_event_index - start_size:]
         p = meal_predict(prev_data, exog, start_size, history_size, prediction_size, model_meal)
-        color = 'red'
     else:
         p1 = night_predict(prev_data, start_size, history_size, prediction_size, model_night)
 
@@ -196,15 +196,14 @@ def predict_future(prev_data, exog, start_size, history_size, prediction_size, m
         last_ind = prev_data.index[-1] + 1
         new_index = pd.RangeIndex(last_ind, last_ind + len(exog))
         exog.index = new_index
-
-        color = 'green'
         future_event_index = exog.loc[exog['k'] != 0].index.to_list()
 
         if future_event_index:
             future_event_index = future_event_index[0]
         else:
             # print("GGG")
-            return p, color
+            print(p1)
+            return p1
 
         meal_prediction_size = prediction_size - (future_event_index - exog.index[0])
 
@@ -214,7 +213,7 @@ def predict_future(prev_data, exog, start_size, history_size, prediction_size, m
 
         p = meal_predict(history, regressors, start_size, history_size, meal_prediction_size, model_meal)
         p = pd.concat([p1.reset_index(drop=True)[:-meal_prediction_size], p.reset_index(drop=True)], axis=0)
-
+        print(p)
     return p
 
 def RMAE(target, prediction):
@@ -234,15 +233,16 @@ def fit(user_id, j_str, path = ''):
     data = parse_data(j_str)
     meal_claster = clustering_meal_data(data, start_size, history_size)
     insulin_claster = clustering_insulin_data(data, start_size, history_size)
-    if(len(data) < 1000 or len(meal_claster) < 50):
+    if(len(data) < 1000 or len(meal_claster) < 20 * size):
         return False
     meal_endog = meal_claster['Gl']
-    insulin_endog = insulin_claster['Gl']
+    #insulin_endog = insulin_claster['Gl']
     meal_exog = meal_claster[['k','b','j', 'u']]
-    insulin_exog = insulin_claster['count', 'type']
-    fit_meal_model(meal_endog, meal_exog, size, user_id)
-    fit_insulin_model(insulin_endog, insulin_exog, size, user_id)
+    #insulin_exog = insulin_claster['count', 'type']
+
     fit_night_model(data['Gl'], size, user_id)
+    fit_meal_model(meal_endog, meal_exog, size, user_id)
+    #fit_insulin_model(insulin_endog, insulin_exog, size, user_id)
     return True
 
 def predict(user_id, j_str, path = ''):
@@ -257,11 +257,11 @@ def predict(user_id, j_str, path = ''):
 
     data = parse_data(j_str)
 
-    if(len(data) < size):
+    if (len(data) < size):
         print("Недостаточно точек")
         return []
 
-    data = data[ -size : ]['Gl', 'k', 'b', 'j', 'u']
+    data = data[ -size : ][['Gl', 'k', 'b', 'j', 'u']]
     empty_exog  = pd.DataFrame(dict.fromkeys(['k', 'b', 'j', 'u'], [0] * prediction_size))
 
     if not os.path.exists(path_to_night):
@@ -278,5 +278,6 @@ def predict(user_id, j_str, path = ''):
 
 
     p = predict_future(data, empty_exog, start_size, history_size, prediction_size, model_meal, model_night)
+
     return p
 
