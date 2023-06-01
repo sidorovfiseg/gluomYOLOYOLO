@@ -127,11 +127,12 @@ def clustering_night_data(data, start_size, history_size):
     return union
 
 def fit_meal_model(endog, exog, size, user_id, path = ''):
-    model = SARIMAX(endog, exog, order=(7, 0, 4), seasonal_order=(2, 0, 1, size))
+    model = SARIMAX(endog, exog, order=(5, 0, 4), seasonal_order=(2, 0, 1, size))
     model_fit = model.fit(maxiter = 50)
 
     path_to_folder = os.path.join(path, 'models')
     path_to_file = os.path.join(path_to_folder, str(user_id) + '_meal_model.pkl')
+
     with open(path_to_file, 'wb') as f:
       pickle.dump(model_fit, f)
 
@@ -145,9 +146,9 @@ def fit_insulin_model(endog, exog, size, user_id, path = ''):
       pickle.dump(model_fit, f)
 
 def fit_night_model(endog, size, user_id, path = ''):
-    model_t = auto_arima(endog, seasonal = False, trace = True)
-    order = model_t.order
-    print(order)
+    #model_t = auto_arima(endog, seasonal = False, trace = True)
+    #order = model_t.order
+    #print(order)
     model = SARIMAX(endog, order = (5,0,2))
     model_fit = model.fit(maxiter = 100)
 
@@ -228,11 +229,13 @@ def fit(user_id, j_str, path = ''):
     if os.path.exists(path_to_file):
         return True
     start_size = 10
-    history_size = 36
+    history_size = 19
     size = start_size + history_size + 1
+
     data = parse_data(j_str)
-    meal_claster = clustering_meal_data(data, start_size, history_size)
+    meal_claster = clustering_meal_data(data, start_size, history_size)[:20 * size]
     insulin_claster = clustering_insulin_data(data, start_size, history_size)
+
     if(len(data) < 1000 or len(meal_claster) < 20 * size):
         return False
     meal_endog = meal_claster['Gl']
@@ -247,7 +250,7 @@ def fit(user_id, j_str, path = ''):
 
 def predict(user_id, j_str, path = ''):
     start_size = 10
-    history_size = 36
+    history_size = 19
     size = start_size + history_size + 1
     prediction_size = 20
     path_to_folder = os.path.join(path, 'models')
@@ -258,15 +261,18 @@ def predict(user_id, j_str, path = ''):
     data = parse_data(j_str)
 
     if (len(data) < size):
-        print("Недостаточно точек")
+        print("Недостаточно точек, нужно 30 точек для предсказания, в базе лежит : ", len(data) )
         return []
 
     data = data[ -size : ][['Gl', 'k', 'b', 'j', 'u']]
     empty_exog  = pd.DataFrame(dict.fromkeys(['k', 'b', 'j', 'u'], [0] * prediction_size))
 
     if not os.path.exists(path_to_night):
-        print("Модель не обучена")
-        return []
+        print("Модель не обучена, использум 0 юзера")
+        user_id = 0
+        path_to_meal = os.path.join(path_to_folder, str(user_id) + '_meal_model.pkl')
+        path_to_insulin = os.path.join(path_to_folder, str(user_id) + '_insulin_model.pkl')
+        path_to_night = os.path.join(path_to_folder, str(user_id) + '_night_model.pkl')
 
     with open(path_to_meal, 'rb') as f:
         model_meal = pickle.load(f)
@@ -275,9 +281,5 @@ def predict(user_id, j_str, path = ''):
 
     with open(path_to_night, 'rb') as f:
         model_night = pickle.load(f)
-
-
-    p = predict_future(data, empty_exog, start_size, history_size, prediction_size, model_meal, model_night)
-
+    p = predict_future(data, empty_exog, start_size, history_size, prediction_size, model_meal, model_night).to_list()
     return p
-
